@@ -9,7 +9,10 @@ const URL = process.env.URL;
 const AFFILIATE_ID = process.env.AFFILIATE_ID;
 const SECRET_KEY = process.env.SECRET_KEY;
 
-const getToken2 = async function(){
+/* 
+    Function to get the authorization token from travelbeta's API
+*/
+const fetchAuthorizationToken = async function(){
     const input = {
         key : API_KEY,
         affiliateCode : AFFILIATE_ID,
@@ -35,6 +38,10 @@ const getToken2 = async function(){
     }
 };
 
+/*
+    Function that decides if the authorization token to be used for requests is to be gotten from the 
+    database or from travelbeta's API based on whether a token exists and is still valid (has not expired)
+*/
 const getToken = function(){
     return new Promise(function(resolve, reject){
         Token.findOne({name: 'token'}, function(err, foundToken){
@@ -42,7 +49,7 @@ const getToken = function(){
                 reject("Unable to connect to database");
             }
             else if(!foundToken){
-                getToken2().then(function(tokenData){
+                fetchAuthorizationToken().then(function(tokenData){
                     const newToken = new Token({
                         name: 'token',
                         token: tokenData.token,
@@ -60,7 +67,7 @@ const getToken = function(){
                 });
             }else if(moment(foundToken.expirationTime, 'YYYY/MM/DD kk:mm') < moment()){
                 //token expired. Get new one and update the existing one in database
-                getToken2().then(function(tokenData){
+                fetchAuthorizationToken().then(function(tokenData){
                     foundToken.token = tokenData.token,
                     foundToken.expirationTime = tokenData.expirationTime
                     foundToken.save(function(err){
