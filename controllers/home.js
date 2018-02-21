@@ -205,8 +205,7 @@ router.get('/search/:query', (req, res) => {
                     const airports = city.airports;
                     for(let airport of airports){
                         const newAirport = JSON.parse(JSON.stringify(airport));
-                        newAirport.city = city.name;
-                        newAirport.country = country.name;
+                        newAirport.displayName = `${airport.name} (${airport.iataCode}) ${city.name}, ${country.name}`;  
                         results.push(newAirport);
                     }
                 }
@@ -218,8 +217,7 @@ router.get('/search/:query', (req, res) => {
                         const airports = city.airports;
                         for(let airport of airports){
                             const newAirport = JSON.parse(JSON.stringify(airport));
-                            newAirport.city = city.name;
-                            newAirport.country = country.name;
+                            newAirport.displayName = `${airport.name} (${airport.iataCode}) ${city.name}, ${country.name}`;  
                             results.push(newAirport);
                         }
                     }else{
@@ -230,8 +228,7 @@ router.get('/search/:query', (req, res) => {
                                 airport.name.toLowerCase().startsWith(query.toLowerCase()))
                             {
                                 const newAirport = JSON.parse(JSON.stringify(airport));
-                                newAirport.city = city.name;
-                                newAirport.country = country.name;
+                                newAirport.displayName = `${airport.name} (${airport.iataCode}) ${city.name}, ${country.name}`;  
                                 results.push(newAirport);
                             }
                         }
