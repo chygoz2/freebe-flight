@@ -9,9 +9,16 @@ const TICKET_CLASS_TYPE = {
     PREMIUM_ECONOMY: 2,
     BUSINESS: 3,
     FIRST: 4
-}
+};
+
+const AGE_GROUPS = {
+    ADULT: 3,
+    CHILD: 2,
+    INFANT: 1
+};
 
 module.exports = { 
     FLIGHT_TRIP_TYPE, 
-    TICKET_CLASS_TYPE 
+    TICKET_CLASS_TYPE,
+    AGE_GROUPS
 };
