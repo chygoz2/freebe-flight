@@ -16,8 +16,14 @@ const config = {
 const getHeader = () => {
     return new Promise(function(resolve, reject){
         Token.findOne({name: 'token'}, function(err, token){
-            if(err) reject({status: -1, message: "An error occured while fetching token"});
-            if(!token) reject({status: -1, message: "An error occured while fetching token"});
+            if(err) {
+                reject({status: -1, message: "An error occured while fetching token"});
+                return;
+            }
+            if(!token){
+                reject({status: -1, message: "An error occured while fetching token"});
+                return;
+            }
             config.headers["Authorization"] = token.token;
             resolve();
         });
@@ -72,7 +78,7 @@ const saveCountriesInDatabase = async (countries) => {
     }
 };
 
-router.get('/countries', async (req, res) => {    
+router.get('/populate-countries', async (req, res) => {    
     await getHeader();
     const endpointUrl = `${URL}v1/get-countries`;
     axios.post(endpointUrl, {}, config)
@@ -97,7 +103,22 @@ router.get('/countries', async (req, res) => {
         })
 });
 
-router.get('/countries/:countrycode', (req, res) => {
+router.get('/countries', (req, res) => {
+    Country.find({}, (err, countries) => {
+        if(err){
+            res.status(500).json({status: -1, message: "An error occured while fetching countries list"});
+            return;
+        }
+        
+        res.status(200).json({
+            status: 0, 
+            message: "Request processed successfully",
+            countries: countries
+        });
+    });
+});
+
+router.get('/remote-countries/:countrycode', (req, res) => {
     getHeader().then(() => {
         const endpointUrl = `${URL}v1/get-country`;
         const input = {code: req.params.countrycode};
@@ -118,6 +139,108 @@ router.get('/countries/:countrycode', (req, res) => {
             .catch(err => {
                 res.status(500).json({status: -1, message: "An error occured while fetching country details"});
             });
+    });
+});
+
+router.get('/countries/:countrycode', (req, res) => {
+    let countryCode = req.params.countrycode;
+    if(!countryCode){
+        res.status(500).json({status: -1, message: "Country code not found"});
+        return;
+    }
+    countryCode = countryCode.toUpperCase();
+    Country.findOne({code: countryCode}, (err, country) => {
+        if(err){
+            res.status(500).json({status: -1, message: "An error occured while fetching country details"});
+            return;
+        }
+        res.status(200).json({
+            status: 0, 
+            message: "Request processed successfully",
+            country: country
+        });
+    });
+});
+
+router.get('/countries/:countrycode/airports', (req, res) => {
+    let countryCode = req.params.countrycode;
+    if(!countryCode){
+        res.status(500).json({status: -1, message: "Country code not found"});
+        return;
+    }
+    countryCode = countryCode.toUpperCase();
+    Country.findOne({code: countryCode}, (err, country) => {
+        if(err){
+            res.status(500).json({status: -1, message: "An error occured while fetching country details"});
+            return;
+        }
+        const airports = country.cities.map(city => {
+            return city.airports;
+        });
+        const airp = airports.map(airport => airport[0]);
+        res.status(200).json({
+            status: 0, 
+            message: "Request processed successfully",
+            airports: airp
+        });
+    });
+});
+
+router.get('/search/:query', (req, res) => {
+    const query = req.params.query;
+    const results = [];
+    
+    //get countries containing query
+    Country.find({}, (err, data) => {
+        if(err){
+            res.status(500).json({status: -1, message: "An error occured while performing search"});
+            return;
+        }
+
+        for(let country of data){
+            //check if country name contains the search query. If it does, get all airports in the country
+            if(country.name.toLowerCase().startsWith(query.toLowerCase())){
+                const cities = country.cities;
+                for(let city of cities){
+                    const airports = city.airports;
+                    for(let airport of airports){
+                        const newAirport = JSON.parse(JSON.stringify(airport));
+                        newAirport.city = city.name;
+                        newAirport.country = country.name;
+                        results.push(newAirport);
+                    }
+                }
+            }else{
+                const cities = country.cities;
+                for(let city of cities){
+                    //if the city name contains the search query, get all airports in the city
+                    if(city.name.toLowerCase().startsWith(query.toLowerCase())){ 
+                        const airports = city.airports;
+                        for(let airport of airports){
+                            const newAirport = JSON.parse(JSON.stringify(airport));
+                            newAirport.city = city.name;
+                            newAirport.country = country.name;
+                            results.push(newAirport);
+                        }
+                    }else{
+                        const airports = city.airports;
+                        for(let airport of airports){
+                            //if the airport name or iatacode contains the search query, get all airports in the city
+                            if(airport.iataCode.toLowerCase().startsWith(query.toLowerCase()) ||
+                                airport.name.toLowerCase().startsWith(query.toLowerCase()))
+                            {
+                                const newAirport = JSON.parse(JSON.stringify(airport));
+                                newAirport.city = city.name;
+                                newAirport.country = country.name;
+                                results.push(newAirport);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        res.json(results);  
     });
 });
 

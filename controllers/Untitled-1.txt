@@ -1,0 +1,55 @@
+const saveCountriesInDatabase = async (countries) => {
+    //save countries in database
+    for(const country of countries){
+        const countryCode = country.code; //get country code
+        console.log("Fetching cities and airports for ", countryCode);
+
+        const endpointUrl = `${URL}v1/flight/get-cities`;
+        const input = { countryCode };
+
+        try{
+            //get cities in that country
+            const response = await axios.post(endpointUrl, input, config);
+            const cities = response.data.data;
+
+            //for each city, get the airports in it 
+            await new Promise((resolve, reject) => {
+                const airportPromises = [];
+                for(const city of cities){
+                    const cityCode = city.code;
+                    const endpointUrl = `${URL}v1/flight/get-city-airports`;
+                    const input = {code: cityCode};
+                    
+                    airportPromises.push(
+                        axios.post(endpointUrl, input, config)
+                        .then(response => {
+                            const airports = response.data.data;
+                            city['airports'] = airports;
+                        })
+                    );
+                }
+                Promise.all(airportPromises).then(()=> resolve()).catch(error => reject(error));
+            });
+
+            const query = {code: countryCode};
+            const update = {
+                code: countryCode,
+                name: country.name,
+                isoCode: country.isoCode,
+                dialingCode: country.dialingCode,
+                capital: country.capital,
+                currencyCode: country.currencyCode,
+                currencyName: country.currencyName,
+                cities: cities
+            };
+            const options = {upsert: true, new: true};
+
+            Country.findOneAndUpdate(query, update, options, function(error, result){
+                if(error) throw error;
+            });
+
+        }catch(e){
+            console.log(e);
+        }
+    }
+};

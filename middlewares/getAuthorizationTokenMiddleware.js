@@ -59,6 +59,7 @@ const getToken = function(){
                         if(err){
                             console.log("An error occured while saving token");
                             reject("An error occured while saving token");
+                            return;
                         }
                         resolve(newToken);
                     });
@@ -74,6 +75,7 @@ const getToken = function(){
                         if(err){
                             console.log("An error occured while saving token");
                             reject("An error occured while saving token");
+                            return;
                         }
                         resolve(foundToken);
                     });
