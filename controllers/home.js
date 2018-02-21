@@ -103,7 +103,8 @@ router.get('/populate-countries', async (req, res) => {
         })
 });
 
-router.get('/countries', (req, res) => {
+router.get('/countries',async (req, res) => {
+    await getHeader();
     Country.find({}, (err, countries) => {
         if(err){
             res.status(500).json({status: -1, message: "An error occured while fetching countries list"});
@@ -118,31 +119,31 @@ router.get('/countries', (req, res) => {
     });
 });
 
-router.get('/remote-countries/:countrycode', (req, res) => {
-    getHeader().then(() => {
-        const endpointUrl = `${URL}v1/get-country`;
-        const input = {code: req.params.countrycode};
+router.get('/remote-countries/:countrycode', async (req, res) => {
+    await getHeader();
+    const endpointUrl = `${URL}v1/get-country`;
+    const input = {code: req.params.countrycode};
 
-        axios.post(endpointUrl,input, config)
-            .then(response => {
-                if(response.data.status === 0){
-                    const country = response.data.data;
-                    res.status(200).json({
-                        status: response.data.status, 
-                        message: response.data.message,
-                        country: country
-                    });
-                }else{
-                    res.status(200).json({status: response.status, message: response.message});
-                }
-            })
-            .catch(err => {
-                res.status(500).json({status: -1, message: "An error occured while fetching country details"});
-            });
-    });
+    axios.post(endpointUrl,input, config)
+        .then(response => {
+            if(response.data.status === 0){
+                const country = response.data.data;
+                res.status(200).json({
+                    status: response.data.status, 
+                    message: response.data.message,
+                    country: country
+                });
+            }else{
+                res.status(200).json({status: response.status, message: response.message});
+            }
+        })
+        .catch(err => {
+            res.status(500).json({status: -1, message: "An error occured while fetching country details"});
+        });
 });
 
-router.get('/countries/:countrycode', (req, res) => {
+router.get('/countries/:countrycode', async (req, res) => {
+    await getHeader();
     let countryCode = req.params.countrycode;
     if(!countryCode){
         res.status(500).json({status: -1, message: "Country code not found"});
@@ -162,7 +163,8 @@ router.get('/countries/:countrycode', (req, res) => {
     });
 });
 
-router.get('/countries/:countrycode/airports', (req, res) => {
+router.get('/countries/:countrycode/airports', async (req, res) => {
+    await getHeader();
     let countryCode = req.params.countrycode;
     if(!countryCode){
         res.status(500).json({status: -1, message: "Country code not found"});
@@ -186,7 +188,8 @@ router.get('/countries/:countrycode/airports', (req, res) => {
     });
 });
 
-router.get('/search/:query', (req, res) => {
+router.get('/search/:query', async (req, res) => {
+    await getHeader();
     const query = req.params.query;
     const results = [];
     

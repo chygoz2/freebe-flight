@@ -43,4 +43,19 @@ describe('Countries', () => {
                 });
         });
     });
+
+    describe('/GET Airports by Search Term', () => {
+        it('it should return airport(s) that contain a search query', (done) => {
+            chai.request(server)
+                .get('/api/search/enugu')
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.be.a('array');
+                    res.body[0].should.be.a('object');
+                    res.body[0].should.have.property('iataCode');
+                    assert.equal(res.body[0].iataCode, "ENU");
+                    done();
+                });
+        });
+    });
 });
