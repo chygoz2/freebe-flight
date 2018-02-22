@@ -1,12 +1,17 @@
 const chai = require('chai');
 const chaiHttp = require('chai-http');
+const nock = require('nock');
+const axios = require('axios');
+
 const server = require('../server');
+const getHeaderConfig = require('../controllers/get_header_config');
+const { input, flightSearchResponse } = require('./nock_responses/flight_search_mock_data');
+
 const should = chai.should();
-const expect = chai.expect();
+const expect = chai.expect;
 const assert = chai.assert;
 
 chai.use(chaiHttp);
-process.env.NODE_ENV = 'test';
 
 describe('Countries', () => {
     describe('/GET Countries', () => {
@@ -58,4 +63,27 @@ describe('Countries', () => {
                 });
         });
     });
+});
+
+describe('Flights', () => {
+    describe('/POST Search Flights', () => {
+        beforeEach(() => {
+            nock('http://127.0.0.1:3000')
+              .post('/api/flights/search', input)
+              .reply(200, flightSearchResponse);
+        });
+        it('it should return flights on the specified date', async (done) => {
+            const config = await getHeaderConfig();
+            axios
+                .post('http://127.0.0.1:3000/api/flights/search', input, config)
+                .then(res => {
+                    const { data } = res;
+                    expect(res.status).to.equal(200);
+                    expect(typeof data).to.equal('object');
+                    assert.equal(data.data.airlineItineraries[0].airlineCode, "9J");
+                    assert.equal(data.data.airlineItineraries[0].pricedItineraries[0].totalFare, 2700000);
+                    done();
+                });
+        })
+    })
 });

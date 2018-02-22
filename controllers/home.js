@@ -3,32 +3,10 @@ const router = require('express').Router();
 const axios = require('axios');
 const sha1 = require('sha1');
 const Country = require('../models/Country');
-
-const URL = process.env.URL;
+const getHeaderConfig = require('./get_header_config');
 const Token = require('../models/Token');
 
-const config = {
-    headers: {
-        "Content-Type": "application/json"
-    }
-};
-
-const getHeader = () => {
-    return new Promise(function(resolve, reject){
-        Token.findOne({name: 'token'}, function(err, token){
-            if(err) {
-                reject({status: -1, message: "An error occured while fetching token"});
-                return;
-            }
-            if(!token){
-                reject({status: -1, message: "An error occured while fetching token"});
-                return;
-            }
-            config.headers["Authorization"] = token.token;
-            resolve();
-        });
-    });
-};
+const URL = process.env.URL;
 
 const saveCountriesInDatabase = async (countries) => {
     //save countries in database
@@ -79,7 +57,7 @@ const saveCountriesInDatabase = async (countries) => {
 };
 
 router.get('/populate-countries', async (req, res) => {    
-    await getHeader();
+    const config = await getHeaderConfig();
     const endpointUrl = `${URL}v1/get-countries`;
     axios.post(endpointUrl, {}, config)
         .then(response => {
@@ -104,7 +82,7 @@ router.get('/populate-countries', async (req, res) => {
 });
 
 router.get('/countries',async (req, res) => {
-    await getHeader();
+    const config = await getHeaderConfig();
     Country.find({}, (err, countries) => {
         if(err){
             res.status(500).json({status: -1, message: "An error occured while fetching countries list"});
@@ -120,7 +98,7 @@ router.get('/countries',async (req, res) => {
 });
 
 router.get('/remote-countries/:countrycode', async (req, res) => {
-    await getHeader();
+    const config = await getHeaderConfig();
     const endpointUrl = `${URL}v1/get-country`;
     const input = {code: req.params.countrycode};
 
@@ -143,7 +121,7 @@ router.get('/remote-countries/:countrycode', async (req, res) => {
 });
 
 router.get('/countries/:countrycode', async (req, res) => {
-    await getHeader();
+    const config = await getHeaderConfig();
     let countryCode = req.params.countrycode;
     if(!countryCode){
         res.status(500).json({status: -1, message: "Country code not found"});
@@ -164,7 +142,7 @@ router.get('/countries/:countrycode', async (req, res) => {
 });
 
 router.get('/countries/:countrycode/airports', async (req, res) => {
-    await getHeader();
+    const config = await getHeaderConfig();
     let countryCode = req.params.countrycode;
     if(!countryCode){
         res.status(500).json({status: -1, message: "Country code not found"});
@@ -189,7 +167,7 @@ router.get('/countries/:countrycode/airports', async (req, res) => {
 });
 
 router.get('/search/:query', async (req, res) => {
-    await getHeader();
+    const config = await getHeaderConfig();
     const query = req.params.query;
     const results = [];
     
