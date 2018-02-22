@@ -55,10 +55,10 @@ describe('Countries', () => {
                 .get('/api/search/enugu')
                 .end((err, res) => {
                     res.should.have.status(200);
-                    res.body.should.be.a('array');
-                    res.body[0].should.be.a('object');
-                    res.body[0].should.have.property('iataCode');
-                    assert.equal(res.body[0].iataCode, "ENU");
+                    res.body.should.be.a('object');
+                    res.body.data[0].should.be.a('object');
+                    res.body.data[0].should.have.property('iataCode');
+                    assert.equal(res.body.data[0].iataCode, "ENU");
                     done();
                 });
         });
@@ -82,6 +82,25 @@ describe('Flights', () => {
                     expect(typeof data).to.equal('object');
                     assert.equal(data.data.airlineItineraries[0].airlineCode, "9J");
                     assert.equal(data.data.airlineItineraries[0].pricedItineraries[0].totalFare, 2700000);
+                    done();
+                });
+        })
+    })
+});
+
+describe('Airlines', () => {
+    describe('/POST Get Airline Logos', () => {
+        it('it should return logos of selected airline codes', (done) => {
+            chai.request(server)
+                .post('/api/airlines/get-logos')
+                .send( { codes: ["9J", "VL"] })
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.be.a('object');
+                    assert.equal(res.body.data[0].iataCode, "9J");
+                    assert.equal(res.body.data[0].name, "Dana Airlines Limited");
+                    assert.equal(res.body.data[1].iataCode, "VL");
+                    assert.equal(res.body.data[1].name, "Med View Airlines");
                     done();
                 });
         })

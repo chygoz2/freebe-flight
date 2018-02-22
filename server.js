@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const morgan = require('morgan');
 const homeController = require('./controllers/home');
 const flightsController = require('./controllers/flights');
+const airlinesController = require('./controllers/airlines');
 const db = require('./config/db');
 const getToken = require('./middlewares/getAuthorizationTokenMiddleware');
 
@@ -26,6 +27,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/flights', flightsController);
+app.use('/api/airlines', airlinesController);
 app.use('/api', homeController);
 
 app.listen(port);

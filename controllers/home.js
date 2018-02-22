@@ -1,7 +1,6 @@
 require('dotenv').load();
 const router = require('express').Router();
 const axios = require('axios');
-const sha1 = require('sha1');
 const Country = require('../models/Country');
 const getHeaderConfig = require('./get_header_config');
 const Token = require('../models/Token');
@@ -218,7 +217,12 @@ router.get('/search/:query', async (req, res) => {
             }
         }
 
-        res.json(results);  
+        res.status(200)
+            .json({
+                status:0,
+                message: "Request processed successfully",
+                data: results
+            });  
     });
 });
 

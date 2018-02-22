@@ -1,7 +1,6 @@
 require('dotenv').load();
 const router = require('express').Router();
 const axios = require('axios');
-const sha1 = require('sha1');
 const moment = require('moment');
 const Country = require('../models/Country');
 const Token = require('../models/Token');
@@ -16,8 +15,7 @@ router.post('/search', async (req, res) => {
     const config = await getHeaderConfig();
     
     const endpointUrl = `${URL}v1/flight/process-flight-search`;
-    let input;
-    input = {
+    const input = {
         tripType: req.body.tripType,
         ticketClass: req.body.ticketClass,
         travellerDetail: req.body.travellerDetail,
