@@ -151,10 +151,12 @@ router.post('/issue-ticket', async (req, res) => {
 });
 
 router.post('/ticket-issue-notification', async (req, res) => {
-    const bookingNumber = req.bookingNumber;
-    const ticketDownloadUrl = req.ticketDownloadUrl;
+    const bookingNumber = req.body.bookingNumber;
+    const ticketDownloadUrl = req.body.ticketDownloadUrl;
 
     //complete code to save ticket download url in database
+
+    //UPDATE THE BOOKING STATUS IN THE DATABASE LATER
     Booking.findOneAndUpdate({bookingNumber: bookingNumber}, {ticketDownloadUrl: ticketDownloadUrl}, (err, data) => {
         if(err){
             return res.status(500).json({status: -1});
