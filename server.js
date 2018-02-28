@@ -19,11 +19,16 @@ const port = process.env.PORT || 3000;
 app.use(morgan('dev'));
 app.use((req, res, next) => {
     getToken()
-        .then(token => {})
+        .then(token => {
+            next();
+        })
         .catch(error => {
-            console.log(error)
+            console.log(error);
+            return res.json({
+                status: -1,
+                message: "An error occured while getting authorization token"
+            });
         });
-    next();
 });
 
 app.use('/api/flights', flightsController);
