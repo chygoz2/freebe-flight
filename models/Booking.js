@@ -11,6 +11,7 @@ const bookingSchema = new Schema({
     bookingNumber: { type: String },
     bookingDate: { type: String },
     reservationStatus: {type: String},
+    ticketDownloadUrl: {type: String, default: null},
     pricedItinerary: {
         sequencyNumber: Number,
         totalFare: String,

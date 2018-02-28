@@ -2,6 +2,8 @@ require('dotenv').load();
 const router = require('express').Router();
 const axios = require('axios');
 const moment = require('moment');
+const sha1 = require('sha1');
+
 const Country = require('../models/Country');
 const Token = require('../models/Token');
 const Booking = require('../models/Booking');
@@ -55,7 +57,7 @@ router.post('/create-booking', async (req,res) => {
     axios.post(endpointUrl,input, config)
         .then(response => {
             if(response.data.status === 0){
-                //write code to save booking details to database
+                // save booking details to database
                 const { referenceNumber, bookingNumber } = response.data.data;
                 //insert into database code
                 const booking = new Booking({
@@ -114,5 +116,51 @@ router.post('/cancel-booking', async (req, res) => {
             res.status(500).json({status: -1, message: "An error occured while cancelling booking"});
         });
 });
+
+router.post('/issue-ticket', async (req, res) => {
+    const config = await getHeaderConfig();
+    const walletPasscode = process.env.WALLET_PASSCODE;
+    const secretKey = process.env.SECRET_KEY;
+
+    const endpointUrl = `${URL}v1/affiliate/ticket-issue-request`;
+    const input = { 
+        bookingNumber: req.body.bookingNumber,
+        walletPasscode: walletPasscode,
+        notificationUrl: "",
+        hash: sha1(`${walletPasscode}${secretKey}`)
+    };
+
+    console.log(input.hash)
+
+    axios.post(endpointUrl, input, config)
+        .then(response => {
+            const {status, message, data} = response.data;
+            if(status === -1){
+                return res.status(500).json({status: status, message: message});
+            }
+            if(status === 0){
+                return res.status(200).json(
+                    response.data
+                );
+            }
+        }).catch(err => {
+            res.status(500).json({ status: -1, message: "An error occured while issuing ticket"});
+        });
+
+});
+
+router.post('/ticket-issue-notification', async (req, res) => {
+    const bookingNumber = req.bookingNumber;
+    const ticketDownloadUrl = req.ticketDownloadUrl;
+
+    //complete code to save ticket download url in database
+    Booking.findOneAndUpdate({bookingNumber: bookingNumber}, {ticketDownloadUrl: ticketDownloadUrl}, (err, data) => {
+        if(err){
+            return res.status(500).json({status: -1});
+        }
+        return res.status(200).json({status: 1});
+    })
+});
+
 
 module.exports = router;
