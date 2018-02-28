@@ -8,6 +8,8 @@ const Token = require('../models/Token');
 const URL = process.env.URL;
 
 const saveCountriesInDatabase = async (countries) => {
+    const config = await getHeaderConfig();
+
     //save countries in database
     for(const country of countries){
         const countryCode = country.code; //get country code
@@ -59,12 +61,12 @@ router.get('/populate-countries', async (req, res) => {
     const config = await getHeaderConfig();
     const endpointUrl = `${URL}v1/get-countries`;
     axios.post(endpointUrl, {}, config)
-        .then(response => {
+        .then(async (response) => {
             if(response.data.status === 0){
                 // console.log(response.data);
                 const countries = response.data.data;
 
-                saveCountriesInDatabase(countries);
+                await saveCountriesInDatabase(countries);
 
                 res.status(200).json({
                     status: response.data.status, 
