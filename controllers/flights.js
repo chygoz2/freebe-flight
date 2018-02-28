@@ -158,6 +158,7 @@ router.post('/ticket-issue-notification', async (req, res) => {
         if(err){
             return res.status(500).json({status: -1});
         }
+        //probably write code to send email upon ticket issue to user and/or admin
         return res.status(200).json({status: 1});
     })
 });
