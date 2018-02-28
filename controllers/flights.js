@@ -119,15 +119,16 @@ router.post('/cancel-booking', async (req, res) => {
 
 router.post('/issue-ticket', async (req, res) => {
     const config = await getHeaderConfig();
-    const walletPasscode = process.env.WALLET_PASSCODE;
-    const secretKey = process.env.SECRET_KEY;
+    const WALLET_PASSCODE = process.env.WALLET_PASSCODE;
+    const SECRET_KEY = process.env.SECRET_KEY;
+    const NOFIFICATION_URL = process.env.NOFIFICATION_URL;
 
     const endpointUrl = `${URL}v1/affiliate/ticket-issue-request`;
     const input = { 
         bookingNumber: req.body.bookingNumber,
-        walletPasscode: walletPasscode,
-        notificationUrl: "",
-        hash: sha1(`${walletPasscode}${secretKey}`)
+        walletPasscode: WALLET_PASSCODE,
+        notificationUrl: NOFIFICATION_URL,
+        hash: sha1(`${WALLET_PASSCODE}${SECRET_KEY}`)
     };
 
     console.log(input.hash)
