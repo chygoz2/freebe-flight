@@ -8,7 +8,7 @@ const flightsController = require('./controllers/flights');
 const airlinesController = require('./controllers/airlines');
 const db = require('./config/db');
 const getTokenForThirdPartyApiAccess = require('./middlewares/getAuthorizationTokenMiddleware');
-const verifyJwtToken = require('./middlewares/verify_user_token');
+const verifyJwtToken  = require('./middlewares/verify_user_token');
 
 const app = express();
 

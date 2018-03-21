@@ -3,12 +3,14 @@ const router = require('express').Router();
 const axios = require('axios');
 const moment = require('moment');
 const sha1 = require('sha1');
+const jwt = require('jsonwebtoken');
 
 const Country = require('../models/Country');
 const Token = require('../models/Token');
 const Booking = require('../models/Booking');
 const getHeaderConfig = require('./get_header_config');
 const { FLIGHT_TRIP_TYPE, TICKET_CLASS_TYPE, AGE_GROUPS } = require('../config/constants');
+const { jwtPublicKey } = require('../config/jwt_keys');
 
 const URL = process.env.URL;
 
@@ -41,18 +43,18 @@ router.post('/create-booking', async (req,res) => {
 
     const config = await getHeaderConfig();
 
-    let endpointUrl;
-    if(process.env.ENVIRONMENT === 'test'){
-        endpointUrl = `${URL}v1/flight/create-affiliate-booking`;
-    }
-    else if(process.env.ENVIRONMENT === 'production'){
-        endpointUrl = `${URL}v1/flight/create-booking`;
-    }
+    const endpointUrl = `${URL}v1/flight/create-affiliate-booking`;
+
     const input = {
         pricedItinerary: req.body.pricedItinerary,
         contactInformation: req.body.contactInformation,
         travellers: req.body.travellers
     };
+
+    //get user details from JWT in header
+    const token = req.headers.authorization;
+
+    const jwtuser = jwt.verify(token, jwtPublicKey);
 
     axios.post(endpointUrl,input, config)
         .then(response => {
@@ -61,7 +63,11 @@ router.post('/create-booking', async (req,res) => {
                 const { referenceNumber, bookingNumber } = response.data.data;
                 //insert into database code
                 const booking = new Booking({
-                    user: {},
+                    user: {
+                        firstname: jwtuser.firstName,
+                        lastname: jwtuser.lastName,
+                        email: jwtuser.email.toLowerCase()
+                    },
                     referenceNumber: referenceNumber,
                     bookingNumber: bookingNumber,
                     bookingDate: moment().format("DD/MM/YY gg:mm"),
@@ -165,6 +171,24 @@ router.post('/ticket-issue-notification', async (req, res) => {
         return res.status(200).json({status: 1});
     })
 });
+
+router.get('/get-user-bookings', (req, res) => {
+    //get user details from JWT in header
+    const token = req.headers.authorization;
+    const jwtuser = jwt.verify(token, jwtPublicKey);
+
+    Booking.find({ 'user.email' : jwtuser.email.toLowerCase()}, (err, bookings) => {
+        if(err){
+            return res.status(500).json({status: -1, message: "Unable to retrieve bookings for user"});
+        }
+        console.log(bookings);
+        return res.status(200).json({
+            status: -1,
+            message: "Bookings retrieved successfully",
+            data: bookings
+        });
+    })
+})
 
 
 module.exports = router;
