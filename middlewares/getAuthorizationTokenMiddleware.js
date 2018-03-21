@@ -42,50 +42,44 @@ const fetchAuthorizationToken = async function(){
     Function that decides if the authorization token to be used for requests is to be gotten from the 
     database or from travelbeta's API based on whether a token exists and is still valid (has not expired)
 */
-const getToken = function(){
-    return new Promise(function(resolve, reject){
-        Token.findOne({name: 'token'}, function(err, foundToken){
-            if(err){
-                reject("Unable to connect to database");
-            }
-            else if(!foundToken){
-                fetchAuthorizationToken().then(function(tokenData){
-                    const newToken = new Token({
-                        name: 'token',
-                        token: tokenData.token,
-                        expirationTime: tokenData.expirationTime
-                    });
-                    newToken.save(function(err){
-                        if(err){
-                            console.log("An error occured while saving token");
-                            reject("An error occured while saving token");
-                            return;
-                        }
-                        resolve(newToken);
-                    });
-                }).catch(error => {
-                    reject(error);
+const getToken = function(req, res, next){
+    Token.findOne({name: 'token'}, function(err, foundToken){
+        if(err){
+            return res.status(500).json({status: -1, message: 'Unable to connect to database'});
+        }
+        else if(!foundToken){
+            fetchAuthorizationToken().then(function(tokenData){
+                const newToken = new Token({
+                    name: 'token',
+                    token: tokenData.token,
+                    expirationTime: tokenData.expirationTime
                 });
-            }else if(moment(foundToken.expirationTime, 'YYYY/MM/DD kk:mm') < moment()){
-                //token expired. Get new one and update the existing one in database
-                fetchAuthorizationToken().then(function(tokenData){
-                    foundToken.token = tokenData.token,
-                    foundToken.expirationTime = tokenData.expirationTime
-                    foundToken.save(function(err){
-                        if(err){
-                            console.log("An error occured while saving token");
-                            reject("An error occured while saving token");
-                            return;
-                        }
-                        resolve(foundToken);
-                    });
-                }).catch(error => {
-                    reject(error);
-                });;
-            }else{
-                resolve(foundToken);
-            }
-        });
+                newToken.save(function(err){
+                    if(err){
+                        return res.status(500).json({status: -1, message: "An error occured while saving token"});
+                    }
+                    next();
+                });
+            }).catch(error => {
+                return res.status(500).json({status: -1, message: "An error occured while fetching token"});
+            });
+        }else if(moment(foundToken.expirationTime, 'YYYY/MM/DD kk:mm') < moment()){
+            //token expired. Get new one and update the existing one in database
+            fetchAuthorizationToken().then(function(tokenData){
+                foundToken.token = tokenData.token,
+                foundToken.expirationTime = tokenData.expirationTime
+                foundToken.save(function(err){
+                    if(err){
+                        return res.status(500).json({status: -1, message: "An error occured while saving token"});
+                    }
+                    next();
+                });
+            }).catch(error => {
+                return res.status(500).json({status: -1, message: "An error occured while fetching token"});
+            });;
+        }else{
+            next();
+        }
     });
 };
 

@@ -1,3 +1,5 @@
 .env
 node_modules
 .eslint
+config/jwt
+config/jwt.pub
